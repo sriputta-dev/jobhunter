@@ -26,6 +26,8 @@ from tools.job_extractor import extract_from_url, extract_from_text, is_url
 from tools.resume_parser import extract_resume_text
 from agents.crew import run_job_hunter_crew
 from agents.agents import set_resume_cache
+from dotenv import load_dotenv
+load_dotenv()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -44,14 +46,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 @app.on_event("startup")
 async def startup():
     await init_db()
     logger.info("Database initialized")
-    # Load active resume into agent cache on startup
-    await _load_resume_cache_on_startup()
-
 
 async def _load_resume_cache_on_startup():
     """Load the most recent uploaded resume into agent memory on server start."""
@@ -73,7 +71,7 @@ async def _load_resume_cache_on_startup():
         logger.warning(f"Could not load resume cache on startup: {e}")
 
 
-# ── Pydantic Schemas ──────────────────────────────────────────────────────────
+# Pydantic Schemas
 
 class SearchRequest(BaseModel):
     query: str = ".NET Developer"
@@ -106,14 +104,11 @@ class AnalyzeRequest(BaseModel):
     job_id: int
 
 
-# ── Endpoints ─────────────────────────────────────────────────────────────────
+# Endpoints 
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "version": "1.0.0"}
-
-
-# ── Resume Upload Endpoints ───────────────────────────────────────────────────
 
 @app.post("/api/resume/upload")
 async def upload_resume(

@@ -44,7 +44,7 @@ export default function App() {
     try {
       const { data } = await axios.get(`${API}/api/stats`);
       setStats(data);
-    } catch (e) {}
+    } catch (e) { }
   }, []);
 
   useEffect(() => {
@@ -111,7 +111,27 @@ export default function App() {
   const handleAnalyze = async (jobId) => {
     try {
       await axios.post(`${API}/api/jobs/${jobId}/analyze`);
-      notify("AI analysis started — refresh in 30-60 seconds");
+      notify("AI analysis running — auto-refreshing until done...");
+
+      // Poll every 10 seconds for up to 2 minutes
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        attempts++;
+        try {
+          const { data } = await axios.get(`${API}/api/jobs/${jobId}`);
+          if (data.tailored_resume || data.cold_email || data.notes) {
+            clearInterval(poll);
+            setSelectedJob(data);
+            notify("AI analysis complete! Check Resume, Cold Email and Strategy tabs.");
+          } else if (attempts >= 12) {
+            clearInterval(poll);
+            notify("Analysis taking longer than expected. Click ↺ to refresh manually.", "error");
+          }
+        } catch (e) {
+          clearInterval(poll);
+        }
+      }, 10000);
+
     } catch (e) {
       notify("Analysis failed — check ANTHROPIC_API_KEY is set in .env", "error");
     }
@@ -134,7 +154,7 @@ export default function App() {
       setJobs((prev) =>
         prev.map((j) => (j.id === jobId ? { ...j, is_favorite: isFavorite } : j))
       );
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const handleJobClick = async (job) => {

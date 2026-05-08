@@ -10,7 +10,6 @@ JobHunter CrewAI Agents
 """
 
 from crewai import Agent
-from crewai_tools import SerperDevTool
 import os
 
 
@@ -37,18 +36,17 @@ def get_llm_config():
 
 DEFAULT_CANDIDATE_BACKGROUND = """
 Alex Johnson — Full Stack Software Engineer
-- 5 years experience in .NET Core, C#, ASP.NET Core, React JS, Angular, Python
+- 2 years experience in Java, Springboot, React JS, Angular, Python
 - Enterprise financial platforms, payment pipelines, and distributed systems
 - Microservices architecture with Kafka, RabbitMQ, Docker, Kubernetes
 - Databases: PostgreSQL, MS SQL Server, MongoDB, Oracle
 - Cloud: AWS (EC2, S3, RDS, Lambda, API Gateway), Azure DevOps CI/CD
 - Testing: xUnit, Moq, Jest, TDD, maintaining 85%+ code coverage
 - AI tools: GPT-4o, Claude, GitHub Copilot — actively building RAG and agentic AI projects
-- Published research applying LLMs to software security analysis
-- M.S. Software Engineering, GPA 3.9
-- Certifications: Azure AI Engineer Associate, Azure Fundamentals
+- M.S. Computer Science Engineering, GPA 3.9
+- Certifications: Azure AI Engineer, Azure Fundamentals
 - Open to relocation anywhere in the US
-- GitHub: github.com/alexjohnson-dev (FinFlow, SmartBudget, DocuMind RAG)
+- GitHub: github.com/alexjohnson-dev
 
 NOTE TO USER: Replace this entire block with your own background.
 Edit DEFAULT_CANDIDATE_BACKGROUND in backend/agents/agents.py
@@ -82,7 +80,6 @@ CANDIDATE_BACKGROUND = DEFAULT_CANDIDATE_BACKGROUND
 
 
 def create_job_analyst_agent() -> Agent:
-    llm = get_llm_config()
     return Agent(
         role="Senior Job Market Analyst",
         goal=(
@@ -97,12 +94,11 @@ def create_job_analyst_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm=f"anthropic/{llm['model']}" if "claude" in llm.get("model", "") else llm["model"],
+        llm="anthropic/claude-3-haiku-20240307",
     )
 
 
 def create_resume_tailor_agent() -> Agent:
-    llm = get_llm_config()
     return Agent(
         role="Expert Resume Strategist",
         goal=(
@@ -117,12 +113,11 @@ def create_resume_tailor_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm=f"anthropic/{llm['model']}" if "claude" in llm.get("model", "") else llm["model"],
+        llm="anthropic/claude-sonnet-4-20250514",
     )
 
 
 def create_outreach_agent() -> Agent:
-    llm = get_llm_config()
     return Agent(
         role="Professional Outreach Specialist",
         goal=(
@@ -137,12 +132,11 @@ def create_outreach_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm=f"anthropic/{llm['model']}" if "claude" in llm.get("model", "") else llm["model"],
+        llm="anthropic/claude-3-haiku-20240307",
     )
 
 
 def create_strategy_agent() -> Agent:
-    llm = get_llm_config()
     return Agent(
         role="Career Strategy Coach",
         goal=(
@@ -157,5 +151,5 @@ def create_strategy_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm=f"anthropic/{llm['model']}" if "claude" in llm.get("model", "") else llm["model"],
+        llm="anthropic/claude-sonnet-4-20250514",
     )
