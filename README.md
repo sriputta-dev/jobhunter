@@ -90,6 +90,7 @@ npm start
 
 Dashboard opens at http://localhost:3000.
 
+Note: Run the frontend and backend servers simultaneously in separate terminal instances
 ---
 
 ## First Thing To Do - Upload Your Resume
