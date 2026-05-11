@@ -20,7 +20,7 @@ def get_llm_config():
 
     if anthropic_key:
         return {
-            "model": "claude-sonnet-4-20250514",
+            "model": "claude-3-5-sonnet-20241022",
             "api_key": anthropic_key,
         }
     elif openai_key:
@@ -113,7 +113,7 @@ def create_resume_tailor_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm="anthropic/claude-sonnet-4-20250514",
+        llm="anthropic/claude-3-5-sonnet-20241022",
     )
 
 
@@ -151,5 +151,5 @@ def create_strategy_agent() -> Agent:
         ),
         verbose=True,
         allow_delegation=False,
-        llm="anthropic/claude-sonnet-4-20250514",
+        llm="anthropic/claude-3-5-sonnet-20241022",
     )

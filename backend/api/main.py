@@ -16,6 +16,8 @@ import logging
 import json
 import os
 import sys
+import asyncio
+from functools import partial
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -50,6 +52,7 @@ app.add_middleware(
 async def startup():
     await init_db()
     logger.info("Database initialized")
+    await _load_resume_cache_on_startup()
 
 async def _load_resume_cache_on_startup():
     """Load the most recent uploaded resume into agent memory on server start."""
@@ -416,6 +419,9 @@ async def save_edited_content(
     await db.commit()
 
     return {"success": True, "message": "Edits saved successfully"}
+
+
+@app.post("/api/search")
 async def search_jobs(
     request: SearchRequest,
     background_tasks: BackgroundTasks,
@@ -529,22 +535,29 @@ async def _run_crew_background(
     ats_score: float,
 ):
     """Background task: run crew and save results to DB."""
-    async with AsyncSession(
-        __import__("models.database", fromlist=["engine"]).engine
-    ) as session:
-        crew_result = run_job_hunter_crew(job_title, company, description, ats_score)
+    # run_job_hunter_crew is synchronous (CrewAI is sync) — run in a thread
+    # so it does not block the FastAPI async event loop
+    loop = asyncio.get_event_loop()
+    crew_result = await loop.run_in_executor(
+        None,
+        partial(run_job_hunter_crew, job_title, company, description, ats_score),
+    )
 
+    async with AsyncSessionLocal() as session:
         if crew_result["success"]:
+            analysis = crew_result.get("analysis", "").strip()
+            strategy = crew_result.get("strategy", "").strip()
+            notes_value = None
+            if analysis or strategy:
+                notes_value = f"ANALYSIS:\n{analysis}\n\nSTRATEGY:\n{strategy}".strip()
+
             await session.execute(
                 update(Job)
                 .where(Job.id == job_id)
                 .values(
-                    tailored_resume=crew_result.get("tailored_resume", ""),
-                    cold_email=crew_result.get("cold_email", ""),
-                    notes=(
-                        f"ANALYSIS:\n{crew_result.get('analysis', '')}\n\n"
-                        f"STRATEGY:\n{crew_result.get('strategy', '')}"
-                    ),
+                    tailored_resume=crew_result.get("tailored_resume", "").strip() or None,
+                    cold_email=crew_result.get("cold_email", "").strip() or None,
+                    notes=notes_value,
                     updated_at=datetime.utcnow(),
                 )
             )
